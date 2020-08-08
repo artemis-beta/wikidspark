@@ -39,7 +39,7 @@ class query_builder(object):
                 if getattr(self, member):
                     self._query.SELECT(self._item_var+member)
         _builder = url_builder(wikidata_urls)
-        return(requests.get(**_builder.prepare_query(self._query.Build(), form)).text)
+        return(getattr(requests.get(**_builder.prepare_query(self._query.Build(), form)), form)())
 
     def __str__(self):
         return(self._query.Build())
