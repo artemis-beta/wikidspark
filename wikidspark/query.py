@@ -23,7 +23,7 @@ class query_builder(object):
     def has(self, key):
         self._query.FILTER_EXISTS(key)
 
-    def is_instance(self, value):
+    def instance_of(self, value):
         if isinstance(value, str):
             value = find_id(value)
         self._query.WHERE(P31 = value)
@@ -41,11 +41,12 @@ class query_builder(object):
                     self._query.SELECT(self._item_var+member)
         _builder = url_builder(wikidata_urls)
         if form == 'df':
-            _result = getattr(requests.get(**_builder.prepare_query(self._query.Build(), 'json')), 'json')()
-            return(as_dataframe(_result))
+            _result = requests.get(**_builder.prepare_query(self._query.Build(), 'json'))
+            _json_res = _result.json()
+            return(as_dataframe(_json_res))
         else:
-            _result = getattr(requests.get(**_builder.prepare_query(self._query.Build(), form)), form)()
-            return(_result)
+            _result = requests.get(**_builder.prepare_query(self._query.Build(), form))
+            return(getattr(_result, form)())
 
     def __str__(self):
         return(self._query.Build())
@@ -87,11 +88,3 @@ def find_id(search_str, get_first=True, language="english"):
 
 def get_by_name(name : str, language=None, keys=None):
     return(get_by_id(find_id(name), language, keys))
-
-
-if __name__ in "__main__":
-    x = query_builder()
-    x.is_instance('film')
-    x.Label = True
-    x.Description = True
-    print(x.get(10, 'df'))

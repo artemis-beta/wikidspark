@@ -3,6 +3,8 @@ import wikidspark.exceptions
 import pytest
 from wikidspark.query import *
 import pprint
+import time
+import copy
 
 def test_version():
     assert __version__ == '0.1.0'
@@ -11,8 +13,11 @@ query = query_builder()
 query.Label = True
 query.AltLabel = True
 query.Description = True
-query.is_instance('locomotive')
+query.instance_of('locomotive')
+query_df = copy.deepcopy(query)
 built_query_result = query.get(100)
+time.sleep(5) # So as to not send two queries at same time
+built_query_df = query_df.get(10, 'df')
 
 class TestQuerySystem(object):
     def test_id_retrieval_success(self):
@@ -42,3 +47,6 @@ class TestQuerySystem(object):
 
     def test_query_keys(self):
         assert all(a in built_query_result['results']['bindings'][42].keys() for a in ['itemLabel', 'itemDescription', 'itemAltLabel']) 
+
+    def test_pandas_df(self):
+        assert len(built_query_df) == 10
