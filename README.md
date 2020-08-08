@@ -1,5 +1,5 @@
 # WikidSpark
-![WikidSpark](https://github.com/artemis-beta/wikidspark/workflows/WikidSpark/badge.svg)[![codecov](https://codecov.io/gh/artemis-beta/wikidspark/branch/master/graph/badge.svg)](https://codecov.io/gh/artemis-beta/wikidspark)[![CodeFactor](https://www.codefactor.io/repository/github/artemis-beta/wikidspark/badge)](https://www.codefactor.io/repository/github/artemis-beta/wikidspark)
+![WikidSpark](https://github.com/artemis-beta/wikidspark/workflows/WikidSpark/badge.svg)[![codecov](https://codecov.io/gh/artemis-beta/wikidspark/branch/master/graph/badge.svg)](https://codecov.io/gh/artemis-beta/wikidspark)[![CodeFactor](https://www.codefactor.io/repository/github/artemis-beta/wikidspark/badge)](https://www.codefactor.io/repository/github/artemis-beta/wikidspark)(https://img.shields.io/github/license/artemis-beta/ttb-parser)](https://github.com/artemis-beta/wikidspark/blob/master/LICENSE)
 
 WikidSpark is a python module with the aim of providing easy access to the WikiData SPARQL database. The aim is to provide a friendly method which allows those unfamiliar with SPARQL and databases in general to still access the information.
 
