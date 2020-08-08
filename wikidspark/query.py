@@ -1,5 +1,6 @@
 from wikidspark.remote import url_builder
 from wikidspark.sparql import SPARQL
+from wikidspark.data_structures import as_dataframe
 import wikidspark.exceptions
 from wikidspark.wikidata.properties import properties, wikidata_urls, languages
 from wikipedia import search, page
@@ -39,7 +40,12 @@ class query_builder(object):
                 if getattr(self, member):
                     self._query.SELECT(self._item_var+member)
         _builder = url_builder(wikidata_urls)
-        return(getattr(requests.get(**_builder.prepare_query(self._query.Build(), form)), form)())
+        if form == 'df':
+            _result = getattr(requests.get(**_builder.prepare_query(self._query.Build(), 'json')), 'json')()
+            return(as_dataframe(_result))
+        else:
+            _result = getattr(requests.get(**_builder.prepare_query(self._query.Build(), form)), form)()
+            return(_result)
 
     def __str__(self):
         return(self._query.Build())
@@ -81,3 +87,11 @@ def find_id(search_str, get_first=True, language="english"):
 
 def get_by_name(name : str, language=None, keys=None):
     return(get_by_id(find_id(name), language, keys))
+
+
+if __name__ in "__main__":
+    x = query_builder()
+    x.is_instance('film')
+    x.Label = True
+    x.Description = True
+    print(x.get(10, 'df'))

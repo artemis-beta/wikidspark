@@ -1,8 +1,15 @@
 import pandas as pd
 
-class DataFrame(pd.DataFrame):
-    def from_query(self, query : str):
-        pass
+def as_dataframe(query_result : str):
+    _df_dict = {}
+    _df_dict['id'] = []
+    cols = query_result['head']['vars']
+    for col in cols:
+        _df_dict[col.replace('item', '')] = []
+    results = query_result['results']['bindings']
+    for result in results:
+        _df_dict['id'].append(result['item']['value'].split('entity/')[1])
+        for col in cols:
+            _df_dict[col.replace('item','')].append(result[col]['value'])
+    return(pd.DataFrame(_df_dict))
 
-    def from_json(self, query_result : str):
-        pass
