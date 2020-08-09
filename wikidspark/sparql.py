@@ -3,6 +3,7 @@ from wikidspark.wikidata.meta import prefixes
 class SPARQL(object):
     def __init__(self, item_label="item", language_id="en"):
         self._clear()
+        self._selection = [item_label]
         self._n_entries = 100
         self._language = language_id
         self._item = item_label
@@ -15,14 +16,14 @@ class SPARQL(object):
     def _where_str(self):
         if not self._where:
             return ''
-        return('\t'+'\n'.join([f'?{self._item} {prefixes["property"]}:{k} '+
+        return('\t'+'\n\t'.join([f'?{self._item} {prefixes["property"]}:{k} '+
                            f'{prefixes["entity"]}:{v} .' for k, v in self._where.items()])+'\n')
 
     def _service_str(self):
         if not self._service:
             return ''
         _out_srv = [f'\tSERVICE {s["tag"]}'+' {'+' '.join(s["args"].values())+'} .' for s in self._service]
-        return('\n'.join(_out_srv)+'\n')
+        return('\n\t'.join(_out_srv)+'\n')
 
     def _limit_str(self):
         return(f'\nLIMIT {self._n_entries}')
@@ -31,7 +32,7 @@ class SPARQL(object):
         if not self._filter:
             return ''
         _out_filt = [f'\tFILTER {f} .' for f in self._filter]
-        return('\n'.join(_out_filt)+'\n')
+        return('\n\t'.join(_out_filt)+'\n')
 
     def _order_str(self):
         if not self._ordering:
@@ -42,8 +43,7 @@ class SPARQL(object):
         return(_order_str)
 
     def _clear(self):
-        self._selection = []
-        self._where = []
+        self._where = {}
         self._service = []
         self._filter = []
     
@@ -58,7 +58,7 @@ class SPARQL(object):
         self._ordering = (value, desc)
 
     def WHERE(self, **kwargs):
-        self._where = kwargs
+        self._where.update(**kwargs)
 
     def SERVICE(self, service_tag, **kwargs):
         self._service = [{'tag' : service_tag, 'args' : kwargs}]
@@ -92,5 +92,5 @@ WHERE
 }'''
         _query_str += self._order_str()
         _query_str += self._limit_str()
-        self._clear
+        self._clear()
         return(_query_str)

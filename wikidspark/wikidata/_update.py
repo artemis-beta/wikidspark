@@ -26,5 +26,5 @@ def _update_properties(x_l, x_u):
 
 
 if __name__ in "__main__":
-    _update_properties(2501, 2600)
+    _update_properties(49, 52)
 
