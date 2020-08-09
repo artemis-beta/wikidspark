@@ -14,7 +14,7 @@ languages = {
         "russian" : "ru"
 }
 
-properties = {
+columns = {
     'labels' : [
         'Label',
         'AltLabel',

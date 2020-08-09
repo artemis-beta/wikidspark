@@ -3,10 +3,14 @@ name = "wikidspark"
 version = "0.1.0"
 description = ""
 authors = ["Kristian Zarebski <krizar312@gmail.com>"]
+include = ['README.md', 'LICENSE', 'wikidspark/wikidata/properties.json']
+exclude = ['wikidspark/wikidata/_upload.py']
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
 wikipedia = "^1.4.0"
+pandas = "^1.1.0"
+tqdm = "^4.48.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

@@ -1,4 +1,4 @@
-from wikidspark.wikidata.properties import prefixes
+from wikidspark.wikidata.meta import prefixes
 
 class SPARQL(object):
     def __init__(self, item_label="item", language_id="en"):

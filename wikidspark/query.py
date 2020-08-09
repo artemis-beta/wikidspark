@@ -2,7 +2,9 @@ from wikidspark.remote import url_builder
 from wikidspark.sparql import SPARQL
 from wikidspark.data_structures import as_dataframe
 import wikidspark.exceptions
-from wikidspark.wikidata.properties import properties, wikidata_urls, languages
+from pandas import DataFrame
+from wikidspark.wikidata.meta import columns, wikidata_urls, languages
+from wikidspark.wikidata.catalogue import *
 from wikipedia import search, page
 
 import requests
@@ -13,20 +15,35 @@ class query_builder(object):
         self._item_var = "item"
         self._query = SPARQL(self._item_var, languages[language].replace(' ','_').lower())
         self._query.SELECT(self._item_var)
-        self._set_properties()
+        self._property_func_df = self._set_member_functions()
+        self._set_columns()
 
-    def _set_properties(self):
-        for prop in properties:
-            for member in properties[prop]:
+    def _set_member_functions(self):
+        _replace_str = {' ': '_', '-': '_', '"': '', '\'' : ''}
+        _df_dict = {'function' : [], 'WikiData Property ID' : []}
+        for k, v in catalogue.properties.items():
+            f_name = v
+            for c, n in _replace_str.items():
+                f_name = f_name.replace(c,n)
+            _df_dict['function'].append(f_name)
+            _df_dict['WikiData Property ID'].append(k)
+            def func(value):
+                if isinstance(value, str):
+                    value = find_id(value)
+                self._query.WHERE(**{k : value})
+            setattr(self, f_name, func)
+        return(DataFrame(_df_dict))
+
+    def list_properties(self):
+        return(self._property_func_df)
+
+    def _set_columns(self):
+        for group in columns:
+            for member in columns[group]:
                 setattr(self, member, False)
 
     def has(self, key):
         self._query.FILTER_EXISTS(key)
-
-    def instance_of(self, value):
-        if isinstance(value, str):
-            value = find_id(value)
-        self._query.WHERE(P31 = value)
 
     def order_by(self, value=None):
         if not hasattr(self, value):
@@ -35,8 +52,8 @@ class query_builder(object):
 
     def get(self, n_entries=10, form='json'):
         self._query.LIMIT(n_entries)
-        for prop in properties:
-            for member in properties[prop]:
+        for group in columns:
+            for member in columns[group]:
                 if getattr(self, member):
                     self._query.SELECT(self._item_var+member)
         _builder = url_builder(wikidata_urls)
@@ -88,3 +105,7 @@ def find_id(search_str, get_first=True, language="english"):
 
 def get_by_name(name : str, language=None, keys=None):
     return(get_by_id(find_id(name), language, keys))
+
+if __name__ in "__main__":
+    x = query_builder()
+    print(x.list_properties())
