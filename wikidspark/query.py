@@ -88,6 +88,8 @@ def get_by_id(item_id : str, language=None, keys=None):
 def find_id(search_str, get_first=True, language="english"):
     _lang = languages[language.replace(' ', '_').lower()]
     _wiki_pages = search(search_str)
+    if not _wiki_pages:
+        raise wikidspark.exceptions.IDMatchError(search_str)
     _url = 'https://{}.wikipedia.org/w/api.php?action=query&prop=pageprops&titles={}&format=json'
 
     def _id_from_result(wiki_str):
