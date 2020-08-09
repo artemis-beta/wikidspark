@@ -51,4 +51,4 @@ jobs:
                   fail_ci_if_error: true
                   env_vars: OS,PYTHON,ARCHITECTURE
                   name : codecov-umbrella
-              if: matrix.os = 'ubuntu-latest' && matrix.python == 3.8
+              if: matrix.os == 'ubuntu-latest' && matrix.python == 3.8
