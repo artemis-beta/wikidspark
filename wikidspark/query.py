@@ -30,7 +30,6 @@ class query_builder(object):
             _df_dict['function'].append(f_name)
             _df_dict['WikiData Property ID'].append(k)
             setattr(self, f_name, _member_factory_func(self._query, k))
-        self.instance_of('book')
         return DataFrame(_df_dict)
 
     def list_properties(self):
