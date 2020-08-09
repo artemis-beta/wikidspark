@@ -1,7 +1,7 @@
 from wikidspark import __version__
 import wikidspark.exceptions
 import pytest
-from wikidspark.query import *
+from wikidspark.query import query_builder, _member_factory_func, get_by_id, get_by_name, find_id
 import pprint
 import time
 import copy
@@ -50,3 +50,8 @@ class TestQuerySystem(object):
 
     def test_pandas_df(self):
         assert len(built_query_df) == 10
+
+    def test_member_function_build(self):
+        _query = query_builder()
+        _member_factory_func(_query._query, 'P31')('Q2345')
+        assert _query._query._where['P31'] == 'Q2345'

@@ -114,8 +114,6 @@ def find_id(search_str, get_first=True, language="english"):
         _results.append((page, _id))
     if not _results:
         raise wikidspark.exceptions.IDMatchError(search_str)
-    if get_first:
-        return _results[0][1]
     return _results
 
 def get_by_name(name : str, language=None, keys=None):
