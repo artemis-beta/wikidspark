@@ -124,11 +124,3 @@ def _member_factory_func(query, identifier):
         value = value if check_id(value) else find_id(value)
         query.WHERE(**{identifier : value})
     return func
-
-if __name__ in "__main__":
-    x = query_builder()
-    x.Label = True
-    x.Description = True
-    x.instance_of('bird')
-    item = x.get()
-    print(item.xml)

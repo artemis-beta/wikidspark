@@ -33,7 +33,7 @@ london_ids = find_id('London', get_first=False, language='english')
 ``` 
 
 ### Built Query
-This method uses a class `query_builder` to construct a SPARQL query to be sent to the WikiData query service. The query is built in stages, firstly by defining an instance of the builder (with the optional argument `language`),then adding conditions before finally fetching the results as a `QItem` object. This object allows you to view the data as XML, JSON or a Pandas Dataframe. The data returned currently has the additional properties `Label`, `Description` and `AltLabel` which are turned off by default but can be activated:
+This method uses a class `query_builder` to construct a SPARQL query to be sent to the WikiData query service. The query is built in stages, firstly by defining an instance of the builder (with the optional argument `language`),then adding conditions before finally fetching the results as a `QItem` object. This object allows you to view the data as XML, JSON or a Pandas Dataframe. The data returned currently has the additional properties `Label`, `Description` and `AltLabel` which are turned off by default but can be activated.
 
 ```Python
 # Find first 100 books
@@ -48,4 +48,10 @@ result = my_query.get(limit=100)
 json_res = result.json
 xml_res  = result.xml
 df_res   = result.dataframe
+```
+
+The functions available to the `query_builder` class (e.g. `instance_of`) are based on an extensive list of WikiData properties, the full list can be fetched as a dataframe:
+
+```Python
+query_builder().list_properties()
 ```
