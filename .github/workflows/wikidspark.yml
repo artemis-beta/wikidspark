@@ -42,10 +42,6 @@ jobs:
                     python -m poetry add pytest-cov
                     python -m poetry run pytest --cov=./ --cov-report=xml
 
-            - name: Run Examples
-              run:  for i in $(ls examples/*.py); do python $i; done 
-              shell: python -m poetry shell {0}
-
             - name: Upload Coverage (Ubuntu Python3.8)
               uses: codecov/codecov-action@v1
               with:
