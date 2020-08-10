@@ -3,7 +3,6 @@ import wikidspark.exceptions
 import pytest
 from wikidspark.query import query_builder, _member_factory_func, get_by_id, get_by_name, find_id
 import pprint
-import time
 import copy
 
 def test_version():
@@ -14,10 +13,7 @@ query.Label = True
 query.AltLabel = True
 query.Description = True
 query.instance_of('locomotive')
-query_df = copy.deepcopy(query)
-built_query_result = query.get(100)
-time.sleep(5) # So as to not send two queries at same time
-built_query_df = query_df.get(10, 'df')
+result = query.get(limit=50)
 
 class TestQuerySystem(object):
     def test_id_retrieval_success(self):
@@ -43,13 +39,13 @@ class TestQuerySystem(object):
             get_by_id(test_id)
 
     def test_query_length(self):
-        assert len(built_query_result['results']['bindings']) == 100
+        assert len(result.json['results']['bindings']) == 50
 
     def test_query_keys(self):
-        assert all(a in built_query_result['results']['bindings'][42].keys() for a in ['itemLabel', 'itemDescription', 'itemAltLabel']) 
+        assert any(all(a in list(result.json['results']['bindings'][i].keys()) for a in ['itemLabel', 'itemDescription', 'itemAltLabel']) for i in range(50)) 
 
-    def test_pandas_df(self):
-        assert len(built_query_df) == 10
+    def test_dataframe(self):
+        assert len(result.dataframe) == 50
 
     def test_member_function_build(self):
         _query = query_builder()

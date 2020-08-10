@@ -1,12 +1,13 @@
 from wikidspark.remote import url_builder
 from wikidspark.sparql import SPARQL
-from wikidspark.data_structures import as_dataframe
+from wikidspark.item import QItem
 from wikidspark.wikidata.meta import columns, wikidata_urls, languages
 from wikidspark.wikidata.catalogue import *
 import wikidspark.exceptions
 
 import re
 import requests
+import time
 import json
 
 from pandas import DataFrame
@@ -48,20 +49,19 @@ class query_builder(object):
             raise wikidspark.exceptions.PropertyNotFoundError(value)
         self._query.SELECT(self._item_var+value)
 
-    def get(self, n_entries=10, form='json'):
-        self._query.LIMIT(n_entries)
+    def get(self, limit=None):
+        if limit:
+            self._query.LIMIT(limit)
         for group in columns:
             for member in columns[group]:
                 if getattr(self, member):
                     self._query.SELECT(self._item_var+member)
         _builder = url_builder(wikidata_urls)
-        if form == 'df':
-            _result = requests.get(**_builder.prepare_query(self._query.Build(), 'json'))
-            _json_res = _result.json()
-            return as_dataframe(_json_res)
-        else:
-            _result = requests.get(**_builder.prepare_query(self._query.Build(), form))
-            return getattr(_result, form)()
+
+        _result_json = requests.get(**_builder.prepare_query(self._query.Build(), 'json'))
+        time.sleep(1)
+        _result_xml  = requests.get(**_builder.prepare_query(self._query.Build(), 'xml'))
+        return QItem(_result_json, _result_xml)
 
     def __str__(self):
         return self._query.Build()
@@ -124,3 +124,11 @@ def _member_factory_func(query, identifier):
         value = value if check_id(value) else find_id(value)
         query.WHERE(**{identifier : value})
     return func
+
+if __name__ in "__main__":
+    x = query_builder()
+    x.Label = True
+    x.Description = True
+    x.instance_of('bird')
+    item = x.get()
+    print(item.xml)

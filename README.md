@@ -33,17 +33,19 @@ london_ids = find_id('London', get_first=False, language='english')
 ``` 
 
 ### Built Query
-This method uses a class `query_builder` to construct a SPARQL query to be sent to the WikiData query service. The query is built in stages, firstly by defining an instance of the builder (with the optional argument `language`),then adding conditions before finally fetching the results. Currently properties which can be activated are 'Label', 'AltLabel', 'Description' which are attributes of the class.
+This method uses a class `query_builder` to construct a SPARQL query to be sent to the WikiData query service. The query is built in stages, firstly by defining an instance of the builder (with the optional argument `language`),then adding conditions before finally fetching the results as a `QItem` object. This object allows you to view the data as XML, JSON or a Pandas Dataframe. The data returned currently has the additional properties `Label`, `Description` and `AltLabel` which are turned off by default but can be activated:
 
 ```Python
 # Find first 100 books
 from wikidspark.query import query_builder
 my_query = query_builder("english")
 
-my_query.is_instance('book')
+my_query.instance_of('book')
 my_query.Description = True
 my_query.Label = True
 
-# Fetch maximum of 100 results and return in JSON form (alternatively XML)
-my_query.get(n_entries=100, form='json')
+result = my_query.get(limit=100)
+json_res = result.json
+xml_res  = result.xml
+df_res   = result.dataframe
 ```

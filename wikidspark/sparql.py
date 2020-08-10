@@ -4,7 +4,7 @@ class SPARQL(object):
     def __init__(self, item_label="item", language_id="en"):
         self._clear()
         self._selection = [item_label]
-        self._n_entries = 100
+        self._n_entries = -1
         self._language = language_id
         self._item = item_label
         self._ordering = None
@@ -26,6 +26,8 @@ class SPARQL(object):
         return('\n\t'.join(_out_srv)+'\n')
 
     def _limit_str(self):
+        if self._n_entries == -1:
+            return ''
         return(f'\nLIMIT {self._n_entries}')
 
     def _filter_str(self):
@@ -61,7 +63,8 @@ class SPARQL(object):
         self._where.update(**kwargs)
 
     def SERVICE(self, service_tag, **kwargs):
-        self._service = [{'tag' : service_tag, 'args' : kwargs}]
+        if {'tag' : service_tag, 'args' : kwargs} not in self._service:
+            self._service += [{'tag' : service_tag, 'args' : kwargs}]
 
     def LIMIT(self, n_entries):
         self._n_entries = n_entries
@@ -92,5 +95,4 @@ WHERE
 }'''
         _query_str += self._order_str()
         _query_str += self._limit_str()
-        self._clear()
         return(_query_str)
