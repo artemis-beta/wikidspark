@@ -43,7 +43,7 @@ jobs:
                     python -m poetry run pytest --cov=./ --cov-report=xml
 
             - name: Run Examples
-              run:  poetry run for i in $(ls examples/*.py); do poetry run python $i; done 
+              run:  for i in $(ls examples/*.py); do poetry run python $i; done 
 
             - name: Upload Coverage (Ubuntu Python3.8)
               uses: codecov/codecov-action@v1
