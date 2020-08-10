@@ -1,16 +1,14 @@
 
 #########################################################
 #                                                       #
-#   Build a Query Searching for Harry Potter Books      #
+#           Return 100 UK railway stations              #
 #                                                       #
 #########################################################
 from wikidspark.query import query_builder
 
 query = query_builder()
+query.instance_of('train station')
+query.country('United Kingdom')
 query.Label = True
-query.AltLabel = False
-query.Description = False
-query.author('JK Rowling')               # P50 = Q34660
-query.part_of_the_series('Harry Potter') # P179 = Q8337
-result = query.get()
+result = query.get(100)
 print(result.dataframe)
