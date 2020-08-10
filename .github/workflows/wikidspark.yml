@@ -38,6 +38,7 @@ jobs:
 
             - name: Run Tests
               run : |
+                    python -c "import time; time.sleep(2)"
                     python -m poetry add pytest-cov
                     python -m poetry run pytest --cov=./ --cov-report=xml
 
