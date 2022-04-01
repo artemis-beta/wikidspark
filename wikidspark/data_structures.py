@@ -1,8 +1,8 @@
 import pandas as pd
 
-def as_dataframe(query_result : str):
-    _df_dict = {}
-    _df_dict['id'] = []
+def as_dataframe(query_result : str) -> pd.DataFrame:
+    """Converts the given query result string to a Pandas Dataframe"""
+    _df_dict = {'id': []}
     cols = query_result['head']['vars']
     for col in cols:
         if col == 'item':

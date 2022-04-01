@@ -7,13 +7,14 @@ include = ['README.md', 'LICENSE', 'wikidspark/wikidata/properties.json']
 exclude = ['wikidspark/wikidata/_upload.py']
 
 [tool.poetry.dependencies]
-python = "^3.6.1"
+python ="^3.8,<4.0"
 wikipedia = "^1.4.0"
-pandas = "^1.1.0"
 tqdm = "^4.48.2"
+pandas = "^1.4.1"
+urllib3 = "^1.26.9"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
+pytest = "^7.1.1"
 
 [build-system]
 requires = ["poetry>=0.12"]

@@ -16,7 +16,7 @@ from wikidspark.query import get_by_id
 dga_id = 'Q42'
 
 dga_query_full = get_by_id(dga_id)
-dga_query_filtered = get_by_id(dga_id, language='english', keys=['labels', 'descriptions'])
+dga_query_language = get_by_id(dga_id, language='french')
 ```
 the retrieve-by-name method currently makes use of the pre-requisite `wikipedia` model to find items relevant to the search, making it limited in terms of only displaying those entries which have an article attached to them. The function returns the first match it finds:
 ```Python
@@ -30,15 +30,15 @@ for a wider search it is recommended to use the `find_item` function to firstly 
 ```Python
 dga_id = find_id('Douglas Adams')
 london_ids = find_id('London', get_first=False, language='english')
-``` 
+```
 
 ### Built Query
-This method uses a class `query_builder` to construct a SPARQL query to be sent to the WikiData query service. The query is built in stages, firstly by defining an instance of the builder (with the optional argument `language`),then adding conditions before finally fetching the results as a `QItem` object. This object allows you to view the data as XML, JSON or a Pandas Dataframe. The data returned currently has the additional properties `Label`, `Description` and `AltLabel` which are turned off by default but can be activated.
+This method uses a class `QueryBuilder` to construct a SPARQL query to be sent to the WikiData query service. The query is built in stages, firstly by defining an instance of the builder (with the optional argument `language`),then adding conditions before finally fetching the results as a `QItem` object. This object allows you to view the data as XML, JSON or a Pandas Dataframe. The data returned currently has the additional properties `Label`, `Description` and `AltLabel` which are turned off by default but can be activated.
 
 ```Python
 # Find first 100 books
-from wikidspark.query import query_builder
-my_query = query_builder("english")
+from wikidspark.query import QueryBuilder
+my_query = QueryBuilder("english")
 
 my_query.instance_of('book')
 my_query.Description = True
@@ -50,8 +50,8 @@ xml_res  = result.xml
 df_res   = result.dataframe
 ```
 
-The functions available to the `query_builder` class (e.g. `instance_of`) are based on an extensive list of WikiData properties, the full list can be fetched as a dataframe:
+The functions available to the `QueryBuilder` class (e.g. `instance_of`) are based on an extensive list of WikiData properties, the full list can be fetched as a dataframe:
 
 ```Python
-query_builder().list_properties()
+QueryBuilder().list_properties()
 ```

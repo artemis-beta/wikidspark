@@ -1,27 +1,27 @@
-from wikidspark.remote import url_builder
+import typing
+from wikidspark.remote import URLBuilder, WikidataIDResponse, WikidataSPARQLResponse
 from wikidspark.sparql import SPARQL
-from wikidspark.item import QItem
-from wikidspark.wikidata.meta import columns, wikidata_urls, languages
+import wikidspark.wikidata.meta as wikid_meta
+import wikidspark.wikidata.common as wikid_com
 from wikidspark.wikidata.catalogue import *
 import wikidspark.exceptions
 
-import re
 import requests
 import time
 import json
 
 from pandas import DataFrame
-from wikipedia import search, page
+from wikipedia import search
 
-class query_builder(object):
-    def __init__(self, language="english"):
+class QueryBuilder:
+    def __init__(self, language: str = "english") -> None:
         self._item_var = "item"
         self._lang = language
-        self._query = SPARQL(self._item_var, languages[self._lang.replace(' ', '_').lower()])
+        self._query = SPARQL(self._item_var, wikid_meta.languages[self._lang.replace(' ', '_').lower()])
         self._set_columns()
         self._property_func_df = self._create_member_functions()
-    
-    def _create_member_functions(self):
+
+    def _create_member_functions(self) -> None:
         _replace_str = {' ': '_', '-': '_', '"': '', '\'' : ''}
         _df_dict = {'function' : [], 'WikiData Property ID' : []}
         for k, v in catalogue.properties.items():
@@ -37,8 +37,8 @@ class query_builder(object):
         return self._property_func_df
 
     def _set_columns(self):
-        for group in columns:
-            for member in columns[group]:
+        for group in wikid_meta.columns:
+            for member in wikid_meta.columns[group]:
                 setattr(self, member, False)
 
     def has(self, key):
@@ -52,50 +52,56 @@ class query_builder(object):
     def get(self, limit=None):
         if limit:
             self._query.LIMIT(limit)
-        for group in columns:
-            for member in columns[group]:
+        for group in wikid_meta.columns:
+            for member in wikid_meta.columns[group]:
                 if getattr(self, member):
                     self._query.SELECT(self._item_var+member)
-        _builder = url_builder(wikidata_urls)
 
-        _result_json = requests.get(**_builder.prepare_query(self._query.Build(), 'json'))
+        _builder = URLBuilder()
+        _json_query: str = _builder.prepare_query(self._query.Build(), 'json')
+
+        _result_json: requests.Response = requests.get(**_json_query)
+
+        if _result_json.status_code != 200:
+            raise wikidspark.exceptions.ConnectionError(_result_json)
+
         time.sleep(1)
         _result_xml  = requests.get(**_builder.prepare_query(self._query.Build(), 'xml'))
-        return QItem(_result_json, _result_xml)
+
+        if _result_xml.status_code != 200:
+            raise wikidspark.exceptions.ConnectionError(_result_xml)
+
+        return WikidataSPARQLResponse(_result_json, _result_xml)
 
     def __str__(self):
         return self._query.Build()
 
-def check_id(item_id):
-    return len(re.findall(r'Q\d+', item_id)) > 0
 
-def get_by_id(item_id : str, language=None, keys=None):
-    assert check_id(item_id), "Invalid Item ID"
+def get_by_id(item_id: int, language: typing.Optional[str] = None) -> WikidataIDResponse:
+    if not wikid_com.check_id(item_id):
+        raise AssertionError("Invalid Item ID")
+
+    language = language or "english"
+
     try:
-        _result = requests.get(url_builder(wikidata_urls).fetch_by_id(item_id)).json()['entities'][item_id]
-    except json.decoder.JSONDecodeError:
-        raise wikidspark.exceptions.IDNotFoundError(item_id)
-    if language:
-        _result['labels'] = _result['labels'][languages[language]]['value']
-        _result['descriptions'] = _result['descriptions'][languages[language]]['value']
-        _result['aliases'] = [i['value'] for i in _result['aliases'][languages[language]]]
-        _result['sitelinks'] = _result['sitelinks'][f'{languages[language]}wiki']
-    if keys:
-        _result = {k:_result[k] for k in keys if k in _result}
-    return _result
+        _url = URLBuilder().fetch_by_id(item_id)
+        _result = requests.get(_url)
+    except json.decoder.JSONDecodeError as e:
+        raise wikidspark.exceptions.IDNotFoundError(item_id) from e
 
-def find_id(search_str, get_first=True, language="english"):
-    _lang = languages[language.replace(' ', '_').lower()]
+    return WikidataIDResponse(item_id, _result, language)
+
+
+def find_id(search_str: str, get_first: bool = True, language: str = "english") -> str:
     _wiki_pages = search(search_str)
     if not _wiki_pages:
         raise wikidspark.exceptions.IDMatchError(search_str)
     _url = 'https://{}.wikipedia.org/w/api.php?action=query&prop=pageprops&titles={}&format=json'
 
-    def _id_from_result(wiki_str):
-        _result = requests.get(_url.format(languages[language], wiki_str))
+    def _id_from_result(wiki_str: str) -> typing.Tuple[str, str]:
+        _result = requests.get(_url.format(wikid_meta.languages[language], wiki_str))
         _page0 = list(_result.json()['query']['pages'].keys())[0]
-        _id    = _result.json()['query']['pages'][_page0]['pageprops']['wikibase_item']
-        return _id
+        return _result.json()['query']['pages'][_page0]['pageprops']['wikibase_item']
 
     if search_str.lower() in [i.lower() for i in _wiki_pages]:
         _id = _id_from_result(search_str.replace(' ', '_'))
@@ -116,11 +122,13 @@ def find_id(search_str, get_first=True, language="english"):
         raise wikidspark.exceptions.IDMatchError(search_str)
     return _results
 
-def get_by_name(name : str, language=None, keys=None):
-    return get_by_id(find_id(name), language, keys)
 
-def _member_factory_func(query, identifier):
+def get_by_name(name: str, language: typing.Optional[str] = None) -> typing.Dict[str, WikidataIDResponse]:
+    return get_by_id(find_id(name), language)
+
+
+def _member_factory_func(query: SPARQL, identifier: str) -> typing.Callable:
     def func(value):
-        value = value if check_id(value) else find_id(value)
+        value = value if wikid_com.check_id(value) else find_id(value)
         query.WHERE(**{identifier : value})
     return func

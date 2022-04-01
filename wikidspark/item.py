@@ -1,11 +1,19 @@
-from wikidspark.data_structures import as_dataframe
+import abc
+import typing
+import pandas
+import requests
+import dataclasses
 
-class QItem(object):
-    def __init__(self, json_response, xml_response):
-        self.json = json_response.json()
-        self.xml  = xml_response.text
-        self.dataframe = as_dataframe(self.json)
-        self._attach_members()
+import wikidspark.data_structures as wikid_ds
 
-    def _attach_members(self):
-        pass
+
+@dataclasses.dataclass
+class IDResponseItem(abc.ABC):
+    pass
+
+@dataclasses.dataclass
+class KeysIDResponseItem(IDResponseItem):
+    label: str
+    description: str
+    alias: str
+    sitelink: str

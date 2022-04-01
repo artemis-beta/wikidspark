@@ -1,6 +1,6 @@
 from wikidspark.wikidata.meta import prefixes
 
-class SPARQL(object):
+class SPARQL:
     def __init__(self, item_label="item", language_id="en"):
         self._clear()
         self._selection = [item_label]
@@ -10,14 +10,26 @@ class SPARQL(object):
         self._ordering = None
 
     def _select_str(self):
-        assert self._selection and isinstance(self._selection, list), "Failed to retrieve SELECT string"
+        if not self._selection or not isinstance(self._selection, list):
+            raise AssertionError("Failed to retrieve SELECT string")
         return("SELECT "+' '.join(f'?{s}' for s in self._selection))
 
     def _where_str(self):
-        if not self._where:
-            return ''
-        return('\t'+'\n\t'.join([f'?{self._item} {prefixes["property"]}:{k} '+
-                           f'{prefixes["entity"]}:{v} .' for k, v in self._where.items()])+'\n')
+        return (
+            (
+                '\t'
+                + '\n\t'.join(
+                    [
+                        f'?{self._item} {prefixes["property"]}:{k} '
+                        + f'{prefixes["entity"]}:{v} .'
+                        for k, v in self._where.items()
+                    ]
+                )
+                + '\n'
+            )
+            if self._where
+            else ''
+        )
 
     def _service_str(self):
         if not self._service:
@@ -26,9 +38,7 @@ class SPARQL(object):
         return('\n\t'.join(_out_srv)+'\n')
 
     def _limit_str(self):
-        if self._n_entries == -1:
-            return ''
-        return(f'\nLIMIT {self._n_entries}')
+        return '' if self._n_entries == -1 else f'\nLIMIT {self._n_entries}'
 
     def _filter_str(self):
         if not self._filter:
@@ -48,7 +58,7 @@ class SPARQL(object):
         self._where = {}
         self._service = []
         self._filter = []
-    
+
     def SELECT(self, *args):
         if any('Label' in arg for arg in args):
             self.SERVICE(f'{prefixes["ontology"]}:label',
@@ -82,12 +92,11 @@ class SPARQL(object):
             self._filter.append(f'( {prefixes["property"]}:{k} {relation} "{v}" ) .')
 
     def Build(self):
-        assert self._selection, "Cannot Build Empty Query"
         _query_str = self._select_str()
         _query_str +='''
 WHERE
 {
-'''     
+'''
         _query_str += self._where_str()
         _query_str += self._service_str()
         _query_str += self._filter_str()
