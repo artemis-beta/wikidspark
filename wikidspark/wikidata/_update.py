@@ -1,7 +1,6 @@
-import wikidspark.query as wikid_query
-import wikidspark.exceptions
-import time # Must not overload server
-from tqdm import tqdm
+import tqdm
+import requests
+import html_to_json
 import click
 import json
 import os.path
@@ -10,23 +9,15 @@ import os.path
 loc_dir = os.path.dirname(__file__)
 
 @click.command("update-properties")
-@click.argument("range_lower", type=click.INT)
-@click.argument("range_upper", type=click.INT)
-def _update_properties(range_lower: int, range_upper: int) -> None:
-    assert range_lower > 16, "Lowest property is P17"
-    if os.path.isfile(os.path.join(loc_dir, 'properties.json')):
-        _properties = json.load(open(os.path.join(loc_dir, 'properties.json')))
-    else:
-        _properties = {}
-    for i in tqdm(range(range_lower, range_upper), desc='Fetching Properties'):
-        if f'P{i}' in _properties:
-            continue
-        try:
-            result = wikid_query.get_by_id(f'P{i}')
-        except wikidspark.exceptions.IDNotFoundError:
-            continue
-        _properties[f'P{i}'] = result.name
-        time.sleep(2)
+def _update_properties() -> None:
+    _webpage_dat: str = requests.get("https://www.wikidata.org/wiki/Wikidata:Database_reports/List_of_properties/all").text
+    _tab_cut: str =_webpage_dat.split('<table class="wikitable sortable">')[-1]
+    _tab_cut = '<table class="wikitable sortable">\n' + _tab_cut
+    _tab_cut = _tab_cut.split("</table>")[0] + "</table>"
+    _json_dat = html_to_json.convert(_tab_cut)
+    _tab_dat = _json_dat["table"][0]["tbody"][0]["tr"]
+    _properties = {prop['td'][0]['a'][0]['_value']: prop['td'][1]['_value'] for prop in tqdm.tqdm(_tab_dat[1:])}
+
     json.dump(_properties, open(os.path.join(loc_dir, 'properties.json'), 'w'), indent=2)
 
 
