@@ -3,10 +3,11 @@ from wikidspark.remote import URLBuilder, WikidataIDResponse, WikidataSPARQLResp
 from wikidspark.sparql import SPARQL
 import wikidspark.wikidata.meta as wikid_meta
 import wikidspark.wikidata.common as wikid_com
-from wikidspark.wikidata.catalogue import *
+import wikidspark.wikidata.catalogue as wikid_catalog
 import wikidspark.exceptions
 
 import requests
+import logging
 import time
 import json
 
@@ -14,17 +15,24 @@ from pandas import DataFrame
 from wikipedia import search
 
 class QueryBuilder:
+    """
+    Construct a Wikidata query object
+
+    A full list of queryable Wikidata properties is given using the "list_properties" attribute
+    of an instance of this class.
+    """
+    _logger = logging.getLogger("WikidSpark.QueryBuilder")
     def __init__(self, language: str = "english") -> None:
         self._item_var = "item"
         self._lang = language
         self._query = SPARQL(self._item_var, wikid_meta.languages[self._lang.replace(' ', '_').lower()])
         self._set_columns()
-        self._property_func_df = self._create_member_functions()
+        self._properties_df = self._create_member_functions()
 
-    def _create_member_functions(self) -> None:
+    def _create_member_functions(self) -> DataFrame:
         _replace_str = {' ': '_', '-': '_', '"': '', '\'' : ''}
         _df_dict = {'function' : [], 'WikiData Property ID' : []}
-        for k, v in catalogue.properties.items():
+        for k, v in wikid_catalog.catalogue.properties.items():
             f_name = f'{v}'
             for c, n in _replace_str.items():
                 f_name = f_name.replace(c,n)
@@ -33,32 +41,38 @@ class QueryBuilder:
             setattr(self, f_name, _member_factory_func(self._query, k))
         return DataFrame(_df_dict)
 
-    def list_properties(self):
-        return self._property_func_df
+    @property
+    def list_properties(self) -> DataFrame:
+        return self._properties_df
 
-    def _set_columns(self):
+    def _set_columns(self) -> None:
         for group in wikid_meta.columns:
             for member in wikid_meta.columns[group]:
                 setattr(self, member, False)
 
-    def has(self, key):
+    def has(self, key: str) -> None:
+        self._logger.debug(f"Applying filter 'has {key}'")
         self._query.FILTER_EXISTS(key)
 
-    def order_by(self, value=None):
+    def order_by(self, value: typing.Optional[str] = None) -> None:
         if not hasattr(self, value):
             raise wikidspark.exceptions.PropertyNotFoundError(value)
+        self._logger.debug(f"Applying selection '{self._item_var+value}'")
         self._query.SELECT(self._item_var+value)
 
-    def get(self, limit=None):
+    def get(self, limit: typing.Optional[int] = 100) -> WikidataSPARQLResponse:
         if limit:
+            self._logger.debug(f"Setting query limit to {limit}")
             self._query.LIMIT(limit)
+        else:
+            self._logger.warning("Calling query without item limit, this is not recommended.")
         for group in wikid_meta.columns:
             for member in wikid_meta.columns[group]:
                 if getattr(self, member):
                     self._query.SELECT(self._item_var+member)
 
         _builder = URLBuilder()
-        _json_query: str = _builder.prepare_query(self._query.Build(), 'json')
+        _json_query: str = _builder.prepare_query(self._query.build(), 'json')
 
         _result_json: requests.Response = requests.get(**_json_query)
 
@@ -66,15 +80,15 @@ class QueryBuilder:
             raise wikidspark.exceptions.ConnectionError(_result_json)
 
         time.sleep(1)
-        _result_xml  = requests.get(**_builder.prepare_query(self._query.Build(), 'xml'))
+        _result_xml  = requests.get(**_builder.prepare_query(self._query.build(), 'xml'))
 
         if _result_xml.status_code != 200:
             raise wikidspark.exceptions.ConnectionError(_result_xml)
 
         return WikidataSPARQLResponse(_result_json, _result_xml)
 
-    def __str__(self):
-        return self._query.Build()
+    def __str__(self) -> str:
+        return self._query.build()
 
 
 def get_by_id(item_id: int, language: typing.Optional[str] = None) -> WikidataIDResponse:
@@ -128,7 +142,7 @@ def get_by_name(name: str, language: typing.Optional[str] = None) -> typing.Dict
 
 
 def _member_factory_func(query: SPARQL, identifier: str) -> typing.Callable:
-    def func(value):
-        value = value if wikid_com.check_id(value) else find_id(value)
-        query.WHERE(**{identifier : value})
-    return func
+        def func(value):
+            value = value if wikid_com.check_id(value) else find_id(value)
+            query.WHERE(**{identifier : value})
+        return func

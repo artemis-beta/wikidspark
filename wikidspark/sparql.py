@@ -91,7 +91,7 @@ class SPARQL:
         for k, v in kwargs.items():
             self._filter.append(f'( {prefixes["property"]}:{k} {relation} "{v}" ) .')
 
-    def Build(self):
+    def build(self) -> str:
         _query_str = self._select_str()
         _query_str +='''
 WHERE

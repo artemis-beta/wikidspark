@@ -10,14 +10,13 @@ def query_builder() -> QueryBuilder:
     query.Label = True
     query.AltLabel = True
     query.Description = True
-    query.instance_of('locomotive')
+    query.instance_of("locomotive")
     return query
 
 
 @pytest.fixture
 def query_response(query_builder: QueryBuilder) -> WikidataSPARQLResponse:
     return query_builder.get(50)
-
 
 
 def test_id_retrieval_success():
@@ -30,23 +29,23 @@ def test_id_retrieval_failure():
     with pytest.raises(wikidspark.exceptions.IDMatchError):
         find_id(test_search)
 
-def test_invalid_property(query_builder):
+def test_invalid_property(query_builder: QueryBuilder):
     with pytest.raises(wikidspark.exceptions.PropertyNotFoundError):
         query_builder.order_by('foobar')
 
 def test_id_search_success():
     test_id = 'Q42'
-    get_by_id(test_id).english
+    assert get_by_id(test_id).name == 'Douglas Adams'
 
 def test_id_search_failure():
     test_id = 'Q999999999999999999'
     with pytest.raises(wikidspark.exceptions.IDNotFoundError):
         get_by_id(test_id)
 
-def test_query_length(query_response: QueryBuilder):
+def test_query_length(query_response: WikidataSPARQLResponse):
     assert len(query_response.json['results']['bindings']) == 50
 
-def test_query_keys(query_response: QueryBuilder):
+def test_query_keys(query_response: WikidataSPARQLResponse):
     assert any(all(a in list(query_response.json['results']['bindings'][i].keys()) for a in ['itemLabel', 'itemDescription', 'itemAltLabel']) for i in range(50)) 
 
 def test_dataframe(query_response: WikidataSPARQLResponse):

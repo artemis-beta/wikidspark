@@ -1,30 +1,35 @@
-from wikidspark.query import get_by_id
+import wikidspark.query as wikid_query
 import wikidspark.exceptions
 import time # Must not overload server
 from tqdm import tqdm
+import click
 import json
-from os.path import exists, join, realpath, basename
+import os.path
 
-loc_dir = realpath(__file__).replace(basename(__file__), '')
 
-def _update_properties(x_l, x_u):
-    assert x_l > 16, "Lowest property is P17"
-    if exists(join(loc_dir, 'properties.json')):
-        _properties = json.load(open(join(loc_dir, 'properties.json')))
+loc_dir = os.path.dirname(__file__)
+
+@click.command("update-properties")
+@click.argument("range_lower", type=click.INT)
+@click.argument("range_upper", type=click.INT)
+def _update_properties(range_lower: int, range_upper: int) -> None:
+    assert range_lower > 16, "Lowest property is P17"
+    if os.path.isfile(os.path.join(loc_dir, 'properties.json')):
+        _properties = json.load(open(os.path.join(loc_dir, 'properties.json')))
     else:
         _properties = {}
-    for i in tqdm(range(x_l, x_u), desc='Fetching Properties'):
-        if 'P{i}' in _properties:
+    for i in tqdm(range(range_lower, range_upper), desc='Fetching Properties'):
+        if f'P{i}' in _properties:
             continue
         try:
-            result = get_by_id(f'P{i}')
+            result = wikid_query.get_by_id(f'P{i}')
         except wikidspark.exceptions.IDNotFoundError:
             continue
-        _properties[f'P{i}'] = result['labels']['en']['value']
+        _properties[f'P{i}'] = result.name
         time.sleep(2)
-    json.dump(_properties, open(join(loc_dir, 'properties.json'), 'w'))
+    json.dump(_properties, open(os.path.join(loc_dir, 'properties.json'), 'w'), indent=2)
 
 
 if __name__ in "__main__":
-    _update_properties(49, 52)
+    _update_properties()
 

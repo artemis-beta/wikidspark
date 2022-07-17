@@ -1,4 +1,5 @@
 import datetime
+import logging
 import typing
 import pandas
 import json
@@ -8,6 +9,7 @@ import urllib.parse
 import wikidspark.data_structures as wikid_ds
 import wikidspark.wikidata.meta as wikid_meta
 import wikidspark.exceptions as wikid_exc
+import wikidspark.wikidata.common as wikid_com
 
 
 class URLBuilder:
@@ -46,23 +48,54 @@ class WikidataSPARQLResponse:
 
 
 class WikidataIDResponse:
-    def __init__(self, item_id: int, result: requests.Response, language: typing.Optional[str] = None) -> None:
+    _logger = logging.getLogger("WikidSpark.WikidataIDResponse")
+    def __init__(self, search_id: int, result: requests.Response, language: typing.Optional[str] = None) -> None:
         language = language or "english"
-        language_wikid = wikid_meta.languages[language]
-        _result = result.json()['entities'][item_id]
+
+        if language in wikid_meta.languages.values():
+            language_wikid = language
+        else:
+            language_wikid = wikid_meta.languages[language]
+
+        try:
+            _res_json = result.json()
+        except json.JSONDecodeError as e:
+            raise wikid_exc.IDNotFoundError(search_id) from e
+
+        _result = _res_json['entities'][search_id]
 
 
         if language not in wikid_meta.languages:
             raise wikid_exc.LanguageError(language)
 
-        self.__name: str = _result["labels"][language_wikid]["value"]
-        self.__id: int = item_id
+        try:
+            _labels = _result["labels"]
+            self.__name = _labels[language_wikid]["value"]
+        except KeyError:
+            self._logger.warning(f"Could not retrieve name for '{search_id}' for language '{language}'")
+            self.__name = None
+
+        self.__id: int = search_id
         self.__language: str = language
         self.__modified = datetime.datetime.strptime(_result["modified"], "%Y-%m-%dT%H:%M:%SZ")
         self.__title = _result['title']
-        self.__description = _result['descriptions'][language_wikid]['value']
-        self.__aliases = [i["value"] for i in _result["aliases"][language_wikid]]
-        self.__site_links = _result['sitelinks']
+
+        try:
+            _descriptions = _result["descriptions"]
+            self.__description = _descriptions[language_wikid]['value']
+        except KeyError:
+            self._logger.warning(f"Could not retrieve description for '{search_id}' for language '{language}'")
+            self.__description = None
+
+        try:
+            _aliases = _result["aliases"]
+            self.__aliases = [i["value"] for i in _aliases[language_wikid]]
+        except KeyError:
+            self._logger.warning(f"Could not retrieve aliases for '{search_id}' for language '{language}'")
+            self.__aliases = None
+
+        if wikid_com.is_item(search_id):
+            self.__site_links = _result['sitelinks']
 
     @property
     def language(self) -> str:
@@ -77,11 +110,11 @@ class WikidataIDResponse:
         return self.__title
 
     @property
-    def descriptions(self) -> typing.List[str]:
+    def description(self) -> typing.Optional[typing.List[str]]:
         return self.__description
 
     @property
-    def aliases(self) -> typing.List[str]:
+    def aliases(self) -> typing.Optional[typing.List[str]]:
         return self.__aliases
 
     @property
@@ -89,7 +122,7 @@ class WikidataIDResponse:
         return self.__site_links
 
     @property
-    def name(self) -> typing.List[str]:
+    def name(self) -> typing.Optional[typing.List[str]]:
         return self.__name
 
     def __str__(self) -> str:
