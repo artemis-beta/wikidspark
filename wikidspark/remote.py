@@ -64,7 +64,6 @@ class WikidataIDResponse:
 
         _result = _res_json['entities'][search_id]
 
-
         if language not in wikid_meta.languages:
             raise wikid_exc.LanguageError(language)
 
@@ -75,7 +74,7 @@ class WikidataIDResponse:
             self._logger.warning(f"Could not retrieve name for '{search_id}' for language '{language}'")
             self.__name = None
 
-        self.__id: int = search_id
+        self.__id: str = search_id
         self.__language: str = language
         self.__modified = datetime.datetime.strptime(_result["modified"], "%Y-%m-%dT%H:%M:%SZ")
         self.__title = _result['title']
@@ -96,6 +95,10 @@ class WikidataIDResponse:
 
         if wikid_com.is_item(search_id):
             self.__site_links = _result['sitelinks']
+
+    @property
+    def id(self) -> str:
+        return self.__id
 
     @property
     def language(self) -> str:

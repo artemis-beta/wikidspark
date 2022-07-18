@@ -30,12 +30,14 @@ class QueryBuilder:
         self._properties_df = self._create_member_functions()
 
     def _create_member_functions(self) -> DataFrame:
-        _replace_str = {' ': '_', '-': '_', '"': '', '\'' : ''}
+        _replace_str = {' ': '_', '-': '_', '"': '', '\'' : '', '!': '', '.': '_', '#': '', '*': 'xquery'}
         _df_dict = {'function' : [], 'WikiData Property ID' : []}
         for k, v in wikid_catalog.catalogue.properties.items():
+            if v[0].isnumeric():
+                v = f'num_{v}'
             f_name = f'{v}'
             for c, n in _replace_str.items():
-                f_name = f_name.replace(c,n)
+                f_name = f_name.replace(c,n).lower()
             _df_dict['function'].append(f_name)
             _df_dict['WikiData Property ID'].append(k)
             setattr(self, f_name, _member_factory_func(self._query, k))
