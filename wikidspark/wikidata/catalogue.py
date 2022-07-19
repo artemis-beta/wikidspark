@@ -1,17 +1,22 @@
 import json
-from os.path import exists, join, realpath, basename
+import os.path
 
-loc_dir = realpath(__file__).replace(basename(__file__), '')
+loc_dir = os.path.dirname(__file__)
+
 
 class _catalogue:
     def __init__(self) -> None:
-        assert exists(join(loc_dir, 'properties.json')), "Properties file not found."
-        self.properties = json.load(open(join(loc_dir, 'properties.json')))
+        if not os.path.exists(os.path.join(loc_dir, "properties.json")):
+            raise FileNotFoundError("Properties file not found.")
 
-        if exists(join(loc_dir, 'items.json')):
-            self._items = json.load(loc_dir, 'items.json')
+        with open(os.path.join(loc_dir, "properties.json")) as f:
+            self.properties = json.load(f)
+
+        if os.path.exists(os.path.join(loc_dir, "items.json")):
+            with open(os.path.join(loc_dir, "items.json")) as f:
+                self._items = json.load(f)
         else:
             self._items = {}
 
-catalogue = _catalogue()
 
+catalogue = _catalogue()

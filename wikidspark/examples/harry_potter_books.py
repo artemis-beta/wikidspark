@@ -1,4 +1,3 @@
-
 #########################################################
 #                                                       #
 #   Build a Query Searching for Harry Potter Books      #
@@ -13,8 +12,8 @@ def harry_potter_books() -> WikidataSPARQLResponse:
     query.Label = True
     query.AltLabel = False
     query.Description = False
-    query.author('JK Rowling')               # P50 = Q34660
-    query.part_of_the_series('Harry Potter') # P179 = Q8337
+    query.author("JK Rowling")  # P50 = Q34660
+    query.part_of_the_series("Harry Potter")  # P179 = Q8337
     return query.get()
 
 

@@ -10,7 +10,7 @@ from wikidspark.remote import WikidataSPARQLResponse
 def hundred_books() -> WikidataSPARQLResponse:
     my_query = QueryBuilder("english")
 
-    my_query.instance_of('book')   # P31 = Q571
+    my_query.instance_of("book")  # P31 = Q571
     my_query.Description = True
     my_query.Label = True
 
