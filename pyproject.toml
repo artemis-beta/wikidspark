@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wikidspark"
-version = "0.1.0"
+version = "0.2.1"
 description = "Wikidspark is an API for querying the Wikidata item database, allowing uses to search either directly by name or ID, or construct SPARQL queries"
 authors = ["Kristian Zarebski <krizar312@gmail.com>"]
 license = "GPL-v3"
