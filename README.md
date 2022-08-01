@@ -50,6 +50,20 @@ xml_res  = result.xml
 df_res   = result.dataframe
 ```
 
+You can also search using a property ID and string value:
+
+```Python
+# Find Richmond station via CRS code 'RMD'
+from wikidspark.query import QueryBuilder
+my_query = QueryBuilder("english")
+
+my_query.Description = True
+my_query.Label = True
+my_query.property_equals("P4755", "RMD")
+
+df_res   = result.dataframe
+```
+
 The functions available to the `QueryBuilder` class (e.g. `instance_of`) are based on an extensive list of WikiData properties, the full list can be fetched as a dataframe:
 
 ```Python
