@@ -13,7 +13,7 @@ class SPARQL:
     def _select_str(self):
         if not self._selection or not isinstance(self._selection, list):
             raise AssertionError("Failed to retrieve SELECT string")
-        return "SELECT " + " ".join(f"?{s}" for s in self._selection)
+        return "SELECT DISTINCT " + " ".join(f"?{s}" for s in self._selection)
 
     def _where_str(self):
         return (
@@ -29,6 +29,23 @@ class SPARQL:
                 + "\n"
             )
             if self._where
+            else ""
+        )
+
+    def _statement_str(self):
+        return (
+            (
+                "\t"
+                + "\n\t".join(
+                    [
+                        f'?item p:{prop} ?statement0 .\n'
+                        + f'?statement0 (ps:{prop}) "{value}" .'
+                        for prop, value in self._statements.items()
+                    ]
+                )
+                + "\n"
+            )
+            if self._statements
             else ""
         )
 
@@ -66,6 +83,7 @@ class SPARQL:
         self._where = {}
         self._service = []
         self._filter = []
+        self._statements = {}
 
     def SELECT(self, *args):
         if any("Label" in arg for arg in args):
@@ -95,6 +113,9 @@ class SPARQL:
                 "EXISTS {?item" + prefixes["property"] + ":" + v + " } ."
             )
 
+    def STATEMENT(self, **kwargs):
+        self._statements.update(**kwargs)
+
     def FILTER_NOT_EXISTS(self, **kwargs):
         for _, v in kwargs.items():
             self._filter.append(
@@ -112,6 +133,7 @@ WHERE
 {
 """
         _query_str += self._where_str()
+        _query_str += self._statement_str()
         _query_str += self._service_str()
         _query_str += self._filter_str()
         _query_str += """

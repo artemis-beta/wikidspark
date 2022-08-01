@@ -58,6 +58,9 @@ class QueryBuilder:
             setattr(self, f_name, _member_factory_func(self._query, k))
         return DataFrame(_df_dict)
 
+    def property_equals(self, property_id: str, value: str) -> None:
+        self._query.STATEMENT(**{property_id: value})
+
     @property
     def list_properties(self) -> DataFrame:
         return self._properties_df
