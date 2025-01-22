@@ -37,8 +37,8 @@ def test_invalid_property(query_builder: QueryBuilder):
 
 
 def test_id_search_success():
-    test_id = "Q42"
-    assert get_by_id(test_id).name == "Douglas Adams"
+    test_id = "Q1"
+    assert get_by_id(test_id).name == "Universe"
 
 
 def test_id_search_failure():

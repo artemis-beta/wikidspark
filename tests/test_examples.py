@@ -13,7 +13,7 @@ EXAMPLE_DIR = os.path.join(pathlib.Path(__file__).parents[1], "examples")
 
 @pytest.mark.examples
 def test_harry_potter_query() -> None:
-    assert len(wiki_ex_hp.harry_potter_books().dataframe) == 9
+    assert len(wiki_ex_hp.harry_potter_books().dataframe) == 10
 
 
 @pytest.mark.examples
