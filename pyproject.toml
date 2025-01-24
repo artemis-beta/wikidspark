@@ -5,6 +5,23 @@ description = "Wikidspark is an API for querying the Wikidata item database, all
 authors = ["Kristian Zarębski <krizar312@gmail.com>"]
 license = "GPL-v3"
 readme = "README.md"
+repository = "https://github.com/artemis-beta/wikidspark"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Database",
+    "Topic :: Internet",
+]
+
+keywords = [
+    "wikidata",
+    "sparql",
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -14,6 +31,11 @@ click = "^8.1.8"
 html-to-json = "^2.0.0"
 pandas = "^2.2.3"
 urllib3 = "^2.3.0"
+
+[tool.pytest.ini_options]
+markers = [
+    "examples: tests marked as an example",
+]
 
 
 [tool.poetry.group.dev.dependencies]
